@@ -1,7 +1,7 @@
 {
   "name": "greenbook-backend",
   "version": "1.0.0",
-  "description": "Backend for GreenBook OS",
+  "description": "GreenBook OS backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -13,6 +13,5 @@
   "engines": {
     "node": "20.x"
   },
-  "author": "Your Name",
   "license": "MIT"
 }
