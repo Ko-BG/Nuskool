@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>GreenBook OS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+*{box-sizing:border-box;font-family:Inter,Segoe UI,system-ui;margin:0}
+body{
+background:radial-gradient(circle at top,#00ffcc22,#001814 70%);
+color:#dffff5; min-height:100vh;
+}
+
+/* HEADER */
+header{
+display:flex;align-items:center;justify-content:space-between;
+padding:14px 18px;
+background:linear-gradient(90deg,#00ffc6,#00c853);
+box-shadow:0 0 30px #00ffc6aa;
+}
+.logo{font-weight:900;color:#003;font-size:20px;}
+.logout{
+border:none;border-radius:30px;
+padding:8px 18px;
+background:black;color:#00ffc6;
+box-shadow:0 0 12px #00ffc6;
+cursor:pointer;font-weight:700;
+transition:.3s;
+}
+.logout:hover{transform:scale(1.08);box-shadow:0 0 25px #00ffc6;}
+.profile{font-size:22px}
+
+/* PAGES */
+.page{max-width:440px;margin:80px auto;padding:20px}
+.hidden{display:none}
+
+/* CARD */
+.card{
+background:rgba(0,255,200,.08);
+border:1px solid #00ffc644;
+border-radius:16px;
+padding:22px;
+margin-bottom:16px;
+backdrop-filter:blur(14px);
+box-shadow:0 0 18px #00ffc622;
+}
+h2{text-align:center;margin-bottom:14px;color:#00ffc6}
+
+/* INPUT */
+input,textarea,select,button{
+width:100%;padding:12px;margin:8px 0;
+border-radius:10px;border:none;font-size:15px;
+}
+input,textarea{background:black;color:#00ffc6;border:1px solid #00ffc633}
+button{
+background:linear-gradient(90deg,#00ffc6,#00c853);
+font-weight:700;color:black;cursor:pointer;
+}
+button.secondary{
+background:none;border:1px solid #00ffc6;color:#00ffc6;
+}
+
+/* DASHBOARD */
+.dashboard{max-width:1150px;margin:auto;padding:18px}
+
+/* TAB GRID */
+.tabs{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:12px;margin-bottom:14px;
+}
+.tabs button{
+background:rgba(0,255,200,.15);
+color:#00ffc6;
+border-radius:14px;
+box-shadow:0 0 12px #00ffc633;
+transition:.2s;
+}
+.tabs button:hover{transform:translateY(-2px);background:rgba(0,255,200,.35)}
+
+/* PANELS */
+.panel{display:none}
+.panel.active{display:block}
+
+/* CANVAS */
+canvas{
+background:black;border-radius:12px;
+border:1px solid #00ffc6;
+touch-action:none;
+}
+
+/* FEED ITEM */
+.feed{padding:6px;border-bottom:1px solid #00ffc622}
+
+/* SMALL */
+.small{font-size:13px;opacity:.8}
+</style>
+</head>
+
+<body>
+
+<header id="topBar" class="hidden">
+<div class="logo">🌿 GreenBook OS</div>
+<button class="logout" onclick="logout()">LOGOUT</button>
+<div class="profile">👤</div>
+</header>
+
+<!-- HOME -->
+<div id="home" class="page">
+<div class="card">
+<h2>Welcome</h2>
+<button onclick="openSignup('student')">Student Sign Up</button>
+<button onclick="openSignup('teacher')">Teacher Sign Up</button>
+<button onclick="openSignup('parent')">Parent Sign Up</button>
+<hr>
+<button class="secondary" onclick="openLogin('student')">Student Login</button>
+<button class="secondary" onclick="openLogin('teacher')">Teacher Login</button>
+<button class="secondary" onclick="openLogin('parent')">Parent Login</button>
+</div>
+</div>
+
+<!-- SIGNUP -->
+<div id="signupPage" class="page hidden">
+<div class="card">
+<h2 id="signupTitle"></h2>
+<input id="su_name" placeholder="Full Name">
+<input id="su_id" placeholder="Unique ID">
+<input id="su_pass" type="password" placeholder="Password">
+<button onclick="signup()">Create Account</button>
+<button class="secondary" onclick="goHome()">Back</button>
+</div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginPage" class="page hidden">
+<div class="card">
+<h2 id="loginTitle"></h2>
+<input id="li_id" placeholder="ID">
+<input id="li_pass" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<button class="secondary" onclick="goHome()">Back</button>
+</div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="dashboard hidden">
+
+<!-- STUDENT -->
+<div id="studentDash" class="hidden">
+<h2>🎓 Student Dashboard</h2>
+
+<div class="tabs">
+<button onclick="openPanel('s_notes')">Notes</button>
+<button onclick="openPanel('s_assign')">Assignments</button>
+<button onclick="openPanel('s_exam')">Exams</button>
+<button onclick="openPanel('s_feed')">Classroom</button>
+<button onclick="openPanel('s_maktaba')">e-Maktaba</button>
+<button onclick="openPanel('s_sketch')">Stylus</button>
+</div>
+
+<div id="s_notes" class="panel active card">
+<textarea placeholder="Write notes..."></textarea>
+</div>
+
+<div id="s_assign" class="panel card">
+<div id="studentAssignments"></div>
+<input type="file" id="assignFile">
+<button onclick="submitAssignment()">Submit Assignment</button>
+</div>
+
+<div id="s_exam" class="panel card">
+<div id="studentExams"></div>
+<button onclick="takeExam()">Take Exam</button>
+</div>
+
+<div id="s_feed" class="panel card">
+<textarea id="chatMsg" placeholder="Class message"></textarea>
+<button onclick="sendChat()">Send</button>
+<div id="chatBox"></div>
+</div>
+
+<div id="s_maktaba" class="panel card">
+<p>Wallet: <span id="wallet">100</span> credits</p>
+<button onclick="buy()">Buy Digital Resource</button>
+<div id="library"></div>
+</div>
+
+<div id="s_sketch" class="panel card">
+<select id="color"><option>white</option><option>red</option><option>cyan</option></select>
+<input type="range" id="size" min="2" max="12" value="4">
+<canvas id="canvas" width="520" height="300"></canvas>
+<button onclick="clearCanvas()">Clear</button>
+</div>
+</div>
+
+<!-- TEACHER -->
+<div id="teacherDash" class="hidden">
+<h2>👨‍🏫 Teacher Dashboard</h2>
+
+<div class="tabs">
+<button onclick="openPanel('t_assign')">Assignments</button>
+<button onclick="openPanel('t_exam')">Exams</button>
+<button onclick="openPanel('t_feed')">Classroom</button>
+</div>
+
+<div id="t_assign" class="panel active card">
+<input id="tAssign" placeholder="Assignment Title">
+<button onclick="createAssignment()">Publish</button>
+<div id="tAssignFeed"></div>
+</div>
+
+<div id="t_exam" class="panel card">
+<input id="examTitle" placeholder="Exam Title">
+<button onclick="postExam()">Post Exam</button>
+<div id="examFeed"></div>
+</div>
+
+<div id="t_feed" class="panel card">
+<textarea id="teacherMsg" placeholder="Announcement"></textarea>
+<button onclick="sendTeacher()">Post</button>
+<div id="teacherFeed"></div>
+</div>
+</div>
+
+<!-- PARENT -->
+<div id="parentDash" class="hidden">
+<h2>👪 Parent Dashboard</h2>
+<div class="card">
+<div id="parentResults"></div>
+</div>
+</div>
+
+</div>
+
+<script>
+// STORAGE
+let users=JSON.parse(localStorage.users||"{}");
+let assignments=JSON.parse(localStorage.assignments||"[]");
+let exams=JSON.parse(localStorage.exams||"[]");
+let submissions=JSON.parse(localStorage.submissions||"[]");
+let classFeed=JSON.parse(localStorage.classFeed||"[]");
+let library=JSON.parse(localStorage.library||"[]");
+let currentUser=null,currentRole="";
+
+// NAV
+function hideAll(){
+home.classList.add("hidden");
+signupPage.classList.add("hidden");
+loginPage.classList.add("hidden");
+dashboard.classList.add("hidden");
+}
+function openSignup(r){hideAll();currentRole=r;signupTitle.innerText="Sign Up as "+r;signupPage.classList.remove("hidden");}
+function openLogin(r){hideAll();currentRole=r;loginTitle.innerText="Login as "+r;loginPage.classList.remove("hidden");}
+function goHome(){hideAll();home.classList.remove("hidden");topBar.classList.add("hidden");}
+
+// AUTH
+function signup(){
+if(!su_name.value||!su_id.value||!su_pass.value)return alert("Fill all");
+if(users[su_id.value])return alert("User exists");
+users[su_id.value]={name:su_name.value,pass:su_pass.value,role:currentRole};
+localStorage.users=JSON.stringify(users);
+alert("Signup success!");
+openLogin(currentRole);
+}
+
+function login(){
+let u=users[li_id.value];
+if(!u||u.pass!==li_pass.value||u.role!==currentRole)return alert("Invalid login");
+currentUser=u;
+openDashboard();
+}
+
+function openDashboard(){
+hideAll();
+dashboard.classList.remove("hidden");
+topBar.classList.remove("hidden");
+studentDash.classList.add("hidden");
+teacherDash.classList.add("hidden");
+parentDash.classList.add("hidden");
+if(currentUser.role==="student")studentDash.classList.remove("hidden");
+if(currentUser.role==="teacher")teacherDash.classList.remove("hidden");
+if(currentUser.role==="parent")parentDash.classList.remove("hidden");
+renderAll();
+}
+
+function logout(){currentUser=null;goHome();}
+
+// TABS
+function openPanel(id){
+document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+}
+
+// INTERCONNECT
+function renderAll(){
+renderAssignments();
+renderFeed();
+renderExams();
+renderParent();
+renderLibrary();
+}
+
+// ASSIGNMENTS
+function createAssignment(){
+assignments.push({title:tAssign.value});
+localStorage.assignments=JSON.stringify(assignments);
+tAssign.value="";
+renderAssignments();
+}
+function renderAssignments(){
+studentAssignments.innerHTML="";
+tAssignFeed.innerHTML="";
+assignments.forEach(a=>{
+studentAssignments.innerHTML+=`<div class="feed">📘 ${a.title}</div>`;
+tAssignFeed.innerHTML+=`<div class="feed">📘 ${a.title}</div>`;
+});
+}
+function submitAssignment(){
+if(!assignFile.files[0])return alert("Select file");
+submissions.push({student:currentUser.name,type:"assignment"});
+localStorage.submissions=JSON.stringify(submissions);
+alert("Submitted!");
+}
+
+// EXAMS
+function postExam(){
+exams.push({title:examTitle.value});
+localStorage.exams=JSON.stringify(exams);
+examTitle.value="";
+renderExams();
+}
+function renderExams(){
+studentExams.innerHTML="";
+examFeed.innerHTML="";
+exams.forEach(e=>{
+studentExams.innerHTML+=`<div class="feed">📝 ${e.title}</div>`;
+examFeed.innerHTML+=`<div class="feed">📝 ${e.title}</div>`;
+});
+}
+function takeExam(){
+let score=Math.floor(Math.random()*40)+60;
+submissions.push({student:currentUser.name,type:"exam",score});
+localStorage.submissions=JSON.stringify(submissions);
+alert("Exam submitted — Score "+score+"%");
+renderParent();
+}
+
+// FEED
+function sendChat(){
+classFeed.push({user:currentUser.name,text:chatMsg.value});
+localStorage.classFeed=JSON.stringify(classFeed);
+chatMsg.value="";
+renderFeed();
+}
+function sendTeacher(){
+classFeed.push({user:"Teacher",text:teacherMsg.value});
+localStorage.classFeed=JSON.stringify(classFeed);
+teacherMsg.value="";
+renderFeed();
+}
+function renderFeed(){
+chatBox.innerHTML="";
+teacherFeed.innerHTML="";
+classFeed.forEach(m=>{
+chatBox.innerHTML+=`<div class="feed">${m.user}: ${m.text}</div>`;
+teacherFeed.innerHTML+=`<div class="feed">${m.user}: ${m.text}</div>`;
+});
+}
+
+// PARENT
+function renderParent(){
+parentResults.innerHTML="";
+submissions.filter(s=>s.type==="exam").forEach(s=>{
+parentResults.innerHTML+=`<div class="feed">📊 ${s.student} scored ${s.score}%</div>`;
+});
+}
+
+// WALLET
+function buy(){
+let bal=parseInt(wallet.innerText);
+if(bal<10)return alert("Low balance");
+wallet.innerText=bal-10;
+library.push("Digital Resource "+library.length);
+localStorage.library=JSON.stringify(library);
+renderLibrary();
+}
+function renderLibrary(){
+libraryDiv=library.map(r=>`<div class="feed">📚 ${r}</div>`).join("");
+libraryDiv && (library.innerHTML=libraryDiv);
+}
+
+// SMOOTH STYLUS
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+ctx.lineCap="round";ctx.lineJoin="round";
+let drawing=false,lastX=0,lastY=0;
+
+function getPos(e){
+let r=canvas.getBoundingClientRect();
+if(e.touches)return{x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top};
+return{x:e.offsetX,y:e.offsetY};
+}
+function startDraw(e){
+drawing=true;let p=getPos(e);lastX=p.x;lastY=p.y;
+}
+function draw(e){
+if(!drawing)return;
+let p=getPos(e);
+ctx.strokeStyle=color.value;
+ctx.lineWidth=size.value;
+ctx.beginPath();
+ctx.moveTo(lastX,lastY);
+ctx.lineTo(p.x,p.y);
+ctx.stroke();
+lastX=p.x;lastY=p.y;
+}
+function stopDraw(){drawing=false;}
+
+canvas.addEventListener("mousedown",startDraw);
+canvas.addEventListener("mousemove",draw);
+canvas.addEventListener("mouseup",stopDraw);
+canvas.addEventListener("touchstart",e=>{startDraw(e);e.preventDefault();});
+canvas.addEventListener("touchmove",e=>{draw(e);e.preventDefault();});
+canvas.addEventListener("touchend",stopDraw);
+
+function clearCanvas(){ctx.clearRect(0,0,canvas.width,canvas.height);}
+</script>
+
+</body>
+</html>
