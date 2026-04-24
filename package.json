@@ -1,19 +1,61 @@
 {
-  "name": "greenbook-backend",
-  "version": "1.0.0",
-  "description": "Backend for GreenBook OS",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
+  "users": {
+    "STUDENT_ID_001": {
+      "name": "Gillian Nyangaga",
+      "pass": "hashed_password_here",
+      "role": "student",
+      "wallet": 150
+    }
   },
-  "dependencies": {
-    "express": "^4.18.2",
-    "multer": "^1.4.5-lts.2",
-    "cors": "^2.8.5"
-  },
-  "engines": {
-    "node": "20.x"
-  },
-  "author": "Your Name",
-  "license": "MIT"
+  "userNotes": [
+    {
+      "user": "Gillian Nyangaga",
+      "text": "The iNFLUENSA protocol focuses on decentralized IP management for African creators.",
+      "date": "2026-04-24, 10:45:00 PM",
+      "keywords": ["iNFLUENSA", "IP management", "creators"],
+      "sketchData": "data:image/png;base64,..." 
+    }
+  ],
+  "revisionQuestions": [
+    {
+      "student": "Gillian Nyangaga",
+      "question": "What is the primary focus of the iNFLUENSA protocol based on your notes?",
+      "answerHint": "Check your notes regarding decentralized IP management.",
+      "generatedAt": "2026-04-24T21:00:00Z"
+    }
+  ],
+  "flashcards": [
+    {
+      "student": "Gillian Nyangaga",
+      "front": "iNFLUENSA Protocol",
+      "back": "A decentralized management system for IP rights and monetization."
+    }
+  ],
+  "submissions": [
+    {
+      "student": "Gillian Nyangaga",
+      "type": "Assignment",
+      "title": "IP Protocol Draft",
+      "status": "AI Processed",
+      "score": 92,
+      "aiFeedback": "Logic is robust; clear understanding of Afro-futuristic IP standards."
+    }
+  ],
+  "classFeed": [
+    {
+      "user": "Faculty",
+      "text": "🚨 A Global Live Class session has started. Join now!",
+      "type": "Update",
+      "timestamp": "2026-04-24T20:30:00Z"
+    }
+  ],
+  "ipMarket": [
+    {
+      "owner": "Gillian Nyangaga",
+      "desc": "Soil Data Analytics Protocol",
+      "price": 500,
+      "status": "listed"
+    }
+  ],
+  "isLive": false
 }
