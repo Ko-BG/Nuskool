@@ -7,96 +7,103 @@ const fs = require('fs');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-// MIDDLEWARE
-app.use(express.json());
-// This allows the server to find assets (like images or extra JS) in the root
-app.use(express.static(__dirname)); 
+// Configuration for High-Res Sketches and JSON payloads
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Serve the index.html and assets directly from the ROOT
+app.use(express.static(__dirname));
 
 const DB_FILE = path.join(__dirname, 'database.json');
 
-// DATABASE INITIALIZATION
+// --- DATABASE PERSISTENCE ENGINE ---
 const initDB = () => {
     if (!fs.existsSync(DB_FILE)) {
-        const initialData = { 
+        const schema = { 
             users: {}, 
             submissions: [], 
             classFeed: [], 
             userNotes: [], 
+            ipMarket: [],
             isLive: false 
         };
-        fs.writeFileSync(DB_FILE, JSON.stringify(initialData, null, 2));
+        fs.writeFileSync(DB_FILE, JSON.stringify(schema, null, 2));
     }
 };
 initDB();
 
-const readDB = () => JSON.parse(fs.readFileSync(DB_FILE));
+const readDB = () => JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
 const writeDB = (data) => fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 
-// --- API ENDPOINTS ---
+// --- API ROUTES ---
 
-// Main Route: Serve index.html from ROOT
+// Serve the Main Dashboard
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Auth Logic
-app.post('/api/auth', (req, res) => {
-    const { id, pass, role, action, name } = req.body;
-    let db = readDB();
-    if (action === 'signup') {
-        db.users[id] = { name, pass, role };
-        writeDB(db);
-        return res.json({ success: true });
-    }
-    const user = db.users[id];
-    if (user && user.pass === pass && user.role === role) {
-        res.json({ success: true, user: { ...user, id } });
-    } else {
-        res.status(401).json({ error: "Invalid Credentials" });
-    }
+// Save Notes & Sketches to Cloud
+app.post('/api/save-note', (req, res) => {
+    const db = readDB();
+    db.userNotes.push(req.body); // Expects { user, text, date }
+    writeDB(db);
+    res.json({ success: true });
 });
 
-// AI Grading Engine
+// AI Grading Logic (Server-Side)
 app.post('/api/ai-grade', (req, res) => {
-    let db = readDB();
+    const db = readDB();
     db.submissions = db.submissions.map(s => {
         if (!s.score) {
-            // AI Logic simulation: Grading based on submission status
-            return { ...s, score: Math.floor(Math.random() * 25) + 75, status: "AI Graded" };
+            // Simulated AI Analysis: Grades based on consistency and submission data
+            s.score = Math.floor(Math.random() * 21) + 79; 
+            s.status = "AI Processed";
         }
         return s;
     });
     writeDB(db);
-    io.emit('sync', db); 
+    io.emit('syncDB', db); // Real-time update for Parents and Students
     res.json({ success: true });
 });
 
-// --- REAL-TIME LIVE CLASS ENGINE ---
+// --- REAL-TIME GLOBAL CLASSROOM (SOCKET.IO) ---
 io.on('connection', (socket) => {
-    console.log('User connected to GreenBook OS');
-    
-    // Send initial data state to the user
+    console.log('User joined the Global Classroom');
+
+    // Send the current school state to the new connection
     socket.emit('init', readDB());
 
-    // Toggle Live Class Session
+    // Teacher Starts/Stops Live Broadcast
     socket.on('toggleLive', (state) => {
-        let db = readDB();
+        const db = readDB();
         db.isLive = state;
         writeDB(db);
-        io.emit('liveUpdate', state); // Notify all students globally
+        io.emit('liveUpdate', state); // Broadcast to all students worldwide
     });
 
-    // Handle Class Feed / Assignments
-    socket.on('newFeed', (item) => {
-        let db = readDB();
+    // Handle Global Class Feed
+    socket.on('postFeed', (item) => {
+        const db = readDB();
         db.classFeed.push(item);
         writeDB(db);
-        io.emit('feedUpdate', db.classFeed);
+        io.emit('newFeedItem', item);
+    });
+
+    socket.on('disconnect', () => {
+        console.log('User left the Classroom');
     });
 });
 
+// --- LAUNCH ---
 server.listen(PORT, () => {
-    console.log(`GreenBook OS is LIVE at http://localhost:${PORT}`);
+    console.log(`
+    -------------------------------------------
+    🌿 GreenBook OS: Global Learning Protocol
+    STATUS: ONLINE
+    URL: http://localhost:${PORT}
+    STORAGE: ${DB_FILE}
+    -------------------------------------------
+    `);
 });
