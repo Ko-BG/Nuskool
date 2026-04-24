@@ -14,7 +14,10 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Serve the index.html and assets directly from the ROOT
-app.use(express.static(__dirname));
+// 1. Update static files to point to the current directory
+app.use(express.static(path.join(__dirname)));
+
+
 
 const DB_FILE = path.join(__dirname, 'database.json');
 
@@ -96,6 +99,10 @@ io.on('connection', (socket) => {
     });
 });
 
+// 2. Explicitly serve index.html from the root
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 // --- LAUNCH ---
 server.listen(PORT, () => {
     console.log(`
