@@ -1,61 +1,21 @@
 {
-  "users": {
-    "STUDENT_ID_001": {
-      "name": "Gillian Nyangaga",
-      "pass": "hashed_password_here",
-      "role": "student",
-      "wallet": 150
-    }
+  "name": "greenbook-os",
+  "version": "1.0.0",
+  "description": "Global Learning Protocol & Afro-Futuristic IP Management System",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18.0.0"
   },
-  "userNotes": [
-    {
-      "user": "Gillian Nyangaga",
-      "text": "The iNFLUENSA protocol focuses on decentralized IP management for African creators.",
-      "date": "2026-04-24, 10:45:00 PM",
-      "keywords": ["iNFLUENSA", "IP management", "creators"],
-      "sketchData": "data:image/png;base64,..." 
-    }
-  ],
-  "revisionQuestions": [
-    {
-      "student": "Gillian Nyangaga",
-      "question": "What is the primary focus of the iNFLUENSA protocol based on your notes?",
-      "answerHint": "Check your notes regarding decentralized IP management.",
-      "generatedAt": "2026-04-24T21:00:00Z"
-    }
-  ],
-  "flashcards": [
-    {
-      "student": "Gillian Nyangaga",
-      "front": "iNFLUENSA Protocol",
-      "back": "A decentralized management system for IP rights and monetization."
-    }
-  ],
-  "submissions": [
-    {
-      "student": "Gillian Nyangaga",
-      "type": "Assignment",
-      "title": "IP Protocol Draft",
-      "status": "AI Processed",
-      "score": 92,
-      "aiFeedback": "Logic is robust; clear understanding of Afro-futuristic IP standards."
-    }
-  ],
-  "classFeed": [
-    {
-      "user": "Faculty",
-      "text": "🚨 A Global Live Class session has started. Join now!",
-      "type": "Update",
-      "timestamp": "2026-04-24T20:30:00Z"
-    }
-  ],
-  "ipMarket": [
-    {
-      "owner": "Gillian Nyangaga",
-      "desc": "Soil Data Analytics Protocol",
-      "price": 500,
-      "status": "listed"
-    }
-  ],
-  "isLive": false
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "path": "^0.12.7",
+    "fs": "0.0.1-security"
+  },
+  "author": "Gillian Nyangaga",
+  "license": "ISC"
 }
