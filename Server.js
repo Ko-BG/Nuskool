@@ -1,125 +1,94 @@
-const express = require("express");
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
-const cors = require("cors");
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
 const PORT = process.env.PORT || 3000;
 
-// Enable CORS
-app.use(cors());
+// Database Path
+const DB_PATH = path.join(__dirname, 'db.json');
 
-// Parse JSON
+// Middleware
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Create uploads folder if missing
-if (!fs.existsSync("uploads")) fs.mkdirSync("uploads");
+// Helper: Load/Save Data
+const loadDB = () => {
+    if (!fs.existsSync(DB_PATH)) {
+        return { users: {}, submissions: [], classFeed: [], userNotes: [], ipMarket: [], liveState: { active: false } };
+    }
+    return JSON.parse(fs.readFileSync(DB_PATH));
+};
 
-// Multer setup for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname)
-});
-const upload = multer({ storage });
+const saveDB = (data) => fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
 
-// Serve index.html
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
+// --- API ROUTES ---
 
-// In-memory DB (for demo; can replace with a real DB later)
-let users = {};
-let assignments = [];
-let exams = [];
-let submissions = [];
-let classFeed = [];
-let library = [];
-
-// --- AUTH ---
-app.post("/api/signup", (req, res) => {
-  const { id, name, pass, role } = req.body;
-  if (!id || !name || !pass || !role) return res.status(400).json({ error: "Missing fields" });
-  if (users[id]) return res.status(400).json({ error: "User exists" });
-  users[id] = { id, name, pass, role };
-  res.json({ success: true });
+// Auth: Signup/Login
+app.post('/api/signup', (req, res) => {
+    const db = loadDB();
+    const { id, name, pass, role } = req.body;
+    if (db.users[id]) return res.status(400).json({ error: "User exists" });
+    db.users[id] = { name, pass, role };
+    saveDB(db);
+    res.json({ success: true });
 });
 
-app.post("/api/login", (req, res) => {
-  const { id, pass, role } = req.body;
-  const u = users[id];
-  if (!u || u.pass !== pass || u.role !== role) return res.status(400).json({ error: "Invalid login" });
-  res.json({ success: true, user: u });
+// AI Grading Simulation Logic
+app.post('/api/grade', (req, res) => {
+    const db = loadDB();
+    db.submissions.forEach(s => {
+        if (!s.score) {
+            s.score = Math.floor(Math.random() * 31) + 70; // Simulate AI evaluation
+            s.status = "AI Graded";
+            s.feedback = "AI Review: Strong logical flow and correct use of terminology.";
+        }
+    });
+    saveDB(db);
+    // Notify parents/students via Socket.io
+    io.emit('gradesUpdated', { message: "AI has finished grading latest submissions." });
+    res.json({ success: true, updated: db.submissions });
 });
 
-// --- ASSIGNMENTS ---
-app.post("/api/assignment", (req, res) => {
-  const { title } = req.body;
-  if (!title) return res.status(400).json({ error: "Missing title" });
-  assignments.push({ title });
-  res.json({ success: true, assignments });
+// Notes: Save & Search
+app.post('/api/notes', (req, res) => {
+    const db = loadDB();
+    db.userNotes.push(req.body); // { user, text, timestamp }
+    saveDB(db);
+    res.json({ success: true });
 });
 
-app.get("/api/assignments", (req, res) => {
-  res.json(assignments);
+// --- REAL-TIME (SOCKET.IO) ---
+io.on('connection', (socket) => {
+    console.log('User connected:', socket.id);
+
+    // Live Class Toggle
+    socket.on('toggleLive', (state) => {
+        const db = loadDB();
+        db.liveState.active = state;
+        saveDB(db);
+        // Broadcast to all students
+        io.emit('liveStatusUpdate', { active: state });
+    });
+
+    // Chat / Class Feed Broadcast
+    socket.on('sendMsg', (msgData) => {
+        const db = loadDB();
+        db.classFeed.push(msgData);
+        saveDB(db);
+        io.emit('newFeedItem', msgData);
+    });
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected');
+    });
 });
 
-// --- EXAMS ---
-app.post("/api/exam", (req, res) => {
-  const { title } = req.body;
-  if (!title) return res.status(400).json({ error: "Missing title" });
-  exams.push({ title });
-  res.json({ success: true, exams });
+// Start Server
+server.listen(PORT, () => {
+    console.log(`GreenBook OS Master Server at http://localhost:${PORT}`);
 });
-
-app.get("/api/exams", (req, res) => {
-  res.json(exams);
-});
-
-app.post("/api/takeExam", (req, res) => {
-  const { student } = req.body;
-  if (!student) return res.status(400).json({ error: "Missing student" });
-  const score = Math.floor(Math.random() * 40) + 60;
-  submissions.push({ student, type: "exam", score });
-  res.json({ success: true, score });
-});
-
-// --- CLASS FEED ---
-app.post("/api/feed", (req, res) => {
-  const { user, text } = req.body;
-  if (!user || !text) return res.status(400).json({ error: "Missing fields" });
-  classFeed.push({ user, text });
-  res.json({ success: true, classFeed });
-});
-
-app.get("/api/feed", (req, res) => {
-  res.json(classFeed);
-});
-
-// --- PARENT RESULTS ---
-app.get("/api/results", (req, res) => {
-  const results = submissions.filter(s => s.type === "exam");
-  res.json(results);
-});
-
-// --- WALLET / LIBRARY ---
-app.post("/api/buy", (req, res) => {
-  library.push("Digital Resource " + library.length);
-  res.json({ success: true, library });
-});
-
-app.get("/api/library", (req, res) => {
-  res.json(library);
-});
-
-// --- FILE UPLOAD ---
-app.post("/api/upload", upload.single("file"), (req, res) => {
-  res.json({ success: true, filename: req.file.filename });
-});
-
-// SPA fallback
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
-
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
