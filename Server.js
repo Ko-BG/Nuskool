@@ -7,88 +7,96 @@ const fs = require('fs');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
-// Database Path
-const DB_PATH = path.join(__dirname, 'db.json');
-
-// Middleware
+// MIDDLEWARE
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+// This allows the server to find assets (like images or extra JS) in the root
+app.use(express.static(__dirname)); 
 
-// Helper: Load/Save Data
-const loadDB = () => {
-    if (!fs.existsSync(DB_PATH)) {
-        return { users: {}, submissions: [], classFeed: [], userNotes: [], ipMarket: [], liveState: { active: false } };
+const DB_FILE = path.join(__dirname, 'database.json');
+
+// DATABASE INITIALIZATION
+const initDB = () => {
+    if (!fs.existsSync(DB_FILE)) {
+        const initialData = { 
+            users: {}, 
+            submissions: [], 
+            classFeed: [], 
+            userNotes: [], 
+            isLive: false 
+        };
+        fs.writeFileSync(DB_FILE, JSON.stringify(initialData, null, 2));
     }
-    return JSON.parse(fs.readFileSync(DB_PATH));
 };
+initDB();
 
-const saveDB = (data) => fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+const readDB = () => JSON.parse(fs.readFileSync(DB_FILE));
+const writeDB = (data) => fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 
-// --- API ROUTES ---
+// --- API ENDPOINTS ---
 
-// Auth: Signup/Login
-app.post('/api/signup', (req, res) => {
-    const db = loadDB();
-    const { id, name, pass, role } = req.body;
-    if (db.users[id]) return res.status(400).json({ error: "User exists" });
-    db.users[id] = { name, pass, role };
-    saveDB(db);
-    res.json({ success: true });
+// Main Route: Serve index.html from ROOT
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// AI Grading Simulation Logic
-app.post('/api/grade', (req, res) => {
-    const db = loadDB();
-    db.submissions.forEach(s => {
+// Auth Logic
+app.post('/api/auth', (req, res) => {
+    const { id, pass, role, action, name } = req.body;
+    let db = readDB();
+    if (action === 'signup') {
+        db.users[id] = { name, pass, role };
+        writeDB(db);
+        return res.json({ success: true });
+    }
+    const user = db.users[id];
+    if (user && user.pass === pass && user.role === role) {
+        res.json({ success: true, user: { ...user, id } });
+    } else {
+        res.status(401).json({ error: "Invalid Credentials" });
+    }
+});
+
+// AI Grading Engine
+app.post('/api/ai-grade', (req, res) => {
+    let db = readDB();
+    db.submissions = db.submissions.map(s => {
         if (!s.score) {
-            s.score = Math.floor(Math.random() * 31) + 70; // Simulate AI evaluation
-            s.status = "AI Graded";
-            s.feedback = "AI Review: Strong logical flow and correct use of terminology.";
+            // AI Logic simulation: Grading based on submission status
+            return { ...s, score: Math.floor(Math.random() * 25) + 75, status: "AI Graded" };
         }
+        return s;
     });
-    saveDB(db);
-    // Notify parents/students via Socket.io
-    io.emit('gradesUpdated', { message: "AI has finished grading latest submissions." });
-    res.json({ success: true, updated: db.submissions });
-});
-
-// Notes: Save & Search
-app.post('/api/notes', (req, res) => {
-    const db = loadDB();
-    db.userNotes.push(req.body); // { user, text, timestamp }
-    saveDB(db);
+    writeDB(db);
+    io.emit('sync', db); 
     res.json({ success: true });
 });
 
-// --- REAL-TIME (SOCKET.IO) ---
+// --- REAL-TIME LIVE CLASS ENGINE ---
 io.on('connection', (socket) => {
-    console.log('User connected:', socket.id);
+    console.log('User connected to GreenBook OS');
+    
+    // Send initial data state to the user
+    socket.emit('init', readDB());
 
-    // Live Class Toggle
+    // Toggle Live Class Session
     socket.on('toggleLive', (state) => {
-        const db = loadDB();
-        db.liveState.active = state;
-        saveDB(db);
-        // Broadcast to all students
-        io.emit('liveStatusUpdate', { active: state });
+        let db = readDB();
+        db.isLive = state;
+        writeDB(db);
+        io.emit('liveUpdate', state); // Notify all students globally
     });
 
-    // Chat / Class Feed Broadcast
-    socket.on('sendMsg', (msgData) => {
-        const db = loadDB();
-        db.classFeed.push(msgData);
-        saveDB(db);
-        io.emit('newFeedItem', msgData);
-    });
-
-    socket.on('disconnect', () => {
-        console.log('User disconnected');
+    // Handle Class Feed / Assignments
+    socket.on('newFeed', (item) => {
+        let db = readDB();
+        db.classFeed.push(item);
+        writeDB(db);
+        io.emit('feedUpdate', db.classFeed);
     });
 });
 
-// Start Server
 server.listen(PORT, () => {
-    console.log(`GreenBook OS Master Server at http://localhost:${PORT}`);
+    console.log(`GreenBook OS is LIVE at http://localhost:${PORT}`);
 });
