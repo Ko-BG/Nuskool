@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>GreenBook OS</title>
+<title>GreenBook OS | Global Learning Protocol</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -84,12 +84,11 @@ font-size: 13px;
 .panel{display:none}
 .panel.active{display:block}
 
-/* CANVAS */
-canvas{
-background:black;border-radius:12px;
-border:1px solid #00ffc6;
-touch-action:none;
-width: 100%;
+/* FLASHCARDS */
+.flashcard{
+    background: #00ffc6; color: #000; padding: 40px; text-align: center;
+    border-radius: 15px; font-weight: bold; font-size: 1.2rem; cursor: pointer;
+    min-height: 150px; display: flex; align-items: center; justify-content: center;
 }
 
 /* FEED ITEM */
@@ -115,14 +114,15 @@ width: 100%;
 
 <div id="home" class="page">
 <div class="card">
-<h2>Welcome</h2>
-<button onclick="openSignup('student')">Student Sign Up</button>
-<button onclick="openSignup('teacher')">Teacher Sign Up</button>
-<button onclick="openSignup('parent')">Parent Sign Up</button>
-<hr>
-<button class="secondary" onclick="openLogin('student')">Student Login</button>
-<button class="secondary" onclick="openLogin('teacher')">Teacher Login</button>
-<button class="secondary" onclick="openLogin('parent')">Parent Login</button>
+<h2>Global School Portal</h2>
+<p style="text-align:center; font-size: 12px; margin-bottom: 20px;">Digitized Educational Protocol</p>
+<button onclick="openSignup('student')">Register New Student</button>
+<button onclick="openSignup('teacher')">Faculty Registration</button>
+<button onclick="openSignup('parent')">Parent/Guardian Link</button>
+<hr style="border: 0.5px solid #00ffc644; margin: 20px 0;">
+<button class="secondary" onclick="openLogin('student')">Student Classroom Access</button>
+<button class="secondary" onclick="openLogin('teacher')">Teacher Admin Access</button>
+<button class="secondary" onclick="openLogin('parent')">Parent Monitoring Login</button>
 </div>
 </div>
 
@@ -130,19 +130,19 @@ width: 100%;
 <div class="card">
 <h2 id="signupTitle"></h2>
 <input id="su_name" placeholder="Full Name">
-<input id="su_id" placeholder="Unique ID">
+<input id="su_id" placeholder="Admission/ID Number">
 <input id="su_pass" type="password" placeholder="Password">
-<button onclick="signup()">Create Account</button>
-<button class="secondary" onclick="goHome()">Back</button>
+<button onclick="signup()">Complete Enrollment</button>
+<button class="secondary" onclick="goHome()">Back to Portal</button>
 </div>
 </div>
 
 <div id="loginPage" class="page hidden">
 <div class="card">
 <h2 id="loginTitle"></h2>
-<input id="li_id" placeholder="ID">
+<input id="li_id" placeholder="ID Number">
 <input id="li_pass" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
+<button onclick="login()">Enter Classroom</button>
 <button class="secondary" onclick="goHome()">Back</button>
 </div>
 </div>
@@ -150,12 +150,13 @@ width: 100%;
 <div id="dashboard" class="dashboard hidden">
 
 <div id="studentDash" class="hidden">
-<h2>🎓 Student Dashboard</h2>
+<h2>🎓 Global Student Terminal</h2>
 
 <div class="tabs">
 <button onclick="openPanel('s_notes')">Search Notes</button>
+<button onclick="openPanel('s_revision')">AI Revision</button>
 <button onclick="openPanel('s_feed')">Class Feed</button>
-<button onclick="openPanel('s_live')">Live Class</button>
+<button onclick="openPanel('s_live')">Live Stream</button>
 <button onclick="openPanel('s_assign')">Tasks</button>
 <button onclick="openPanel('s_exam')">Exams</button>
 <button onclick="openPanel('s_sketch')">Stylus</button>
@@ -163,98 +164,109 @@ width: 100%;
 </div>
 
 <div id="s_notes" class="panel active card">
-<input id="searchNotes" placeholder="🔍 Search saved notes..." onkeyup="filterNotes()">
-<textarea id="notesArea" placeholder="Start writing or sketching ideas..."></textarea>
+<input id="searchNotes" placeholder="🔍 Search through your knowledge base..." onkeyup="filterNotes()">
+<textarea id="notesArea" placeholder="Capture lecture notes, thoughts, or observations..."></textarea>
 <button onclick="saveNotes()">💾 Save to Cloud</button>
 <div id="savedNotesList" style="margin-top:20px"></div>
 </div>
 
+<div id="s_revision" class="panel card">
+<h3>🤖 AI Study Assistant</h3>
+<p class="small">Revision questions generated from your personal notes & sketches.</p>
+<button onclick="generateAIRevision()">Generate New Revision Set</button>
+<div id="revisionContent" style="margin-top:15px"></div>
+<hr>
+<h3>🗂 Flashcards</h3>
+<div id="flashcardDisplay" class="flashcard" onclick="flipCard()">Click to Start Flashcards</div>
+</div>
+
 <div id="s_feed" class="panel card">
-<div id="notificationAlert" class="hidden" style="color:#00ffc6; margin-bottom:10px; font-weight:bold;">🔔 New updates from Teacher!</div>
 <div id="chatBox"></div>
 </div>
 
 <div id="s_live" class="panel card">
-<div id="liveStatus"><p>No live session currently.</p></div>
+<div id="liveStatus"><p>Standby: Awaiting broadcast from Teacher.</p></div>
 <div id="recordings" style="margin-top:20px">
 <h3>Past Recordings</h3>
-<div class="feed">Session: Intellectual Property 101 (Recorded)</div>
-<div class="feed">Session: Soil Data Analytics (Recorded)</div>
+<div class="feed">Session: Intellectual Property 101</div>
+<div class="feed">Session: Soil Data Analytics</div>
 </div>
 </div>
 
 <div id="s_assign" class="panel card">
 <div id="studentAssignments"></div>
 <input type="file" id="assignFile" multiple>
-<button onclick="submitAssignment()">Submit Assignment</button>
+<button onclick="submitAssignment()">Submit to Teacher</button>
 </div>
 
 <div id="s_exam" class="panel card">
 <div id="studentExams"></div>
-<button onclick="takeExam()">Take Exam</button>
+<button onclick="takeExam()">Begin Assessment</button>
 </div>
 
 <div id="s_sketch" class="panel card">
-<select id="color"><option>white</option><option>red</option><option>cyan</option></select>
-<input type="range" id="size" min="2" max="12" value="4">
+<div style="display: flex; gap: 10px;">
+    <select id="color" style="flex:1;"><option>white</option><option>red</option><option>cyan</option></select>
+    <input type="range" id="size" min="2" max="12" value="4" style="flex:2;">
+</div>
 <canvas id="canvas" width="520" height="300"></canvas>
-<button onclick="clearCanvas()">Clear</button>
-<button onclick="saveCanvas()">💾 Export as PNG</button>
+<button onclick="clearCanvas()">Clear Board</button>
+<button onclick="saveCanvas()">💾 Export Drawing (PNG)</button>
 </div>
 
 <div id="s_influensa" class="panel card">
-<p>Post and monetize your IP</p>
-<textarea id="ipText" placeholder="Describe your creative work"></textarea>
+<p>Afro-Futuristic IP Protocol: Monetize your creativity</p>
+<textarea id="ipText" placeholder="Describe your IP/Innovation"></textarea>
 <input type="number" id="ipPrice" placeholder="Price in credits">
-<button onclick="postIP()">List on Market</button>
+<button onclick="postIP()">List on Influensa</button>
 <div id="ipFeed"></div>
 </div>
 </div>
 
 <div id="teacherDash" class="hidden">
-<h2>👨‍🏫 Teacher Dashboard</h2>
+<h2>👨‍🏫 Faculty Control Center</h2>
 
 <div class="tabs">
-<button onclick="openPanel('t_live')">Live Stream</button>
-<button onclick="openPanel('t_feed')">Class Feed</button>
+<button onclick="openPanel('t_live')">Live Broadcast</button>
+<button onclick="openPanel('t_feed')">Broadcast Feed</button>
 <button onclick="openPanel('t_grading')">AI Grading</button>
-<button onclick="openPanel('t_assign')">Manage Tasks</button>
+<button onclick="openPanel('t_assign')">Curriculum</button>
 </div>
 
 <div id="t_live" class="panel active card">
-<button onclick="toggleLive()" id="liveBtn">🔴 Start Live Online Class</button>
-<p class="small">Live classes are automatically recorded for absent students.</p>
+<button onclick="toggleLive()" id="liveBtn">🔴 Start Global Live Class</button>
+<p class="small">Classes are globally broadcasted and recorded instantly.</p>
 </div>
 
 <div id="t_grading" class="panel card">
-<h3>Submission Monitor</h3>
+<h3>AI Monitoring & Grading</h3>
 <div id="monitorActivity"></div>
 <hr>
-<button onclick="aiGradeSubmissions()">🤖 Run AI Grader</button>
+<button onclick="aiGradeSubmissions()">🤖 Activate AI Grading Logic</button>
 </div>
 
 <div id="t_feed" class="panel card">
-<textarea id="teacherMsg" placeholder="Announcement or Assignment Alert"></textarea>
+<textarea id="teacherMsg" placeholder="Post Announcement or Global Update"></textarea>
 <select id="msgType">
-    <option value="Update">General Update</option>
-    <option value="Urgent">Urgent Task</option>
-    <option value="Live">Live Class Alert</option>
+    <option value="Update">Update</option>
+    <option value="Assignment">Assignment Alert</option>
+    <option value="Exam">Exam Notification</option>
 </select>
-<button onclick="sendTeacher()">Broadcast to Class</button>
+<button onclick="sendTeacher()">Publish to Feed</button>
 <div id="teacherFeed"></div>
 </div>
 
 <div id="t_assign" class="panel card">
-<input id="tAssign" placeholder="Assignment Title">
-<button onclick="createAssignment()">Publish Assignment</button>
+<input id="tAssign" placeholder="New Assignment Title">
+<button onclick="createAssignment()">Publish to Classroom</button>
 <div id="tAssignFeed"></div>
 </div>
 </div>
 
 <div id="parentDash" class="hidden">
-<h2>👪 Parent Dashboard</h2>
+<h2>👪 Guardian Monitoring</h2>
 <div class="card">
-<h3>Live Student Progress</h3>
+<h3>Academic Transparency Report</h3>
 <div id="parentResults"></div>
 </div>
 </div>
@@ -262,207 +274,247 @@ width: 100%;
 </div>
 
 <script>
-// STORAGE
+// STORAGE INITIALIZATION
 let users=JSON.parse(localStorage.users||"{}");
 let assignments=JSON.parse(localStorage.assignments||"[]");
 let exams=JSON.parse(localStorage.exams||"[]");
 let submissions=JSON.parse(localStorage.submissions||"[]");
 let classFeed=JSON.parse(localStorage.classFeed||"[]");
 let ipMarket=JSON.parse(localStorage.ipMarket||"[]");
-let userNotes=JSON.parse(localStorage.userNotes||"[]"); // Changed to array for searching
+let userNotes=JSON.parse(localStorage.userNotes||"[]");
 let isLive = false;
 let currentUser=null,currentRole="";
 
-// NAV
+// NAVIGATION ENGINE
 function hideAll(){
-home.classList.add("hidden");
-signupPage.classList.add("hidden");
-loginPage.classList.add("hidden");
-dashboard.classList.add("hidden");
+    home.classList.add("hidden");
+    signupPage.classList.add("hidden");
+    loginPage.classList.add("hidden");
+    dashboard.classList.add("hidden");
 }
-function openSignup(r){hideAll();currentRole=r;signupTitle.innerText="Sign Up as "+r;signupPage.classList.remove("hidden");}
-function openLogin(r){hideAll();currentRole=r;loginTitle.innerText="Login as "+r;loginPage.classList.remove("hidden");}
+function openSignup(r){hideAll();currentRole=r;signupTitle.innerText="Enroll as "+r;signupPage.classList.remove("hidden");}
+function openLogin(r){hideAll();currentRole=r;loginTitle.innerText="Classroom Access: "+r;loginPage.classList.remove("hidden");}
 function goHome(){hideAll();home.classList.remove("hidden");topBar.classList.add("hidden");}
 
-// AUTH
+// CLASSROOM AUTH
 function signup(){
-if(!su_name.value||!su_id.value||!su_pass.value)return alert("Fill all");
-users[su_id.value]={name:su_name.value,pass:su_pass.value,role:currentRole};
-localStorage.users=JSON.stringify(users);
-alert("Signup success!");
-openLogin(currentRole);
+    if(!su_name.value||!su_id.value||!su_pass.value)return alert("Please fill all school credentials.");
+    users[su_id.value]={name:su_name.value,pass:su_pass.value,role:currentRole};
+    localStorage.users=JSON.stringify(users);
+    alert("Registration Successful!");
+    openLogin(currentRole);
 }
 
 function login(){
-let u=users[li_id.value];
-if(!u||u.pass!==li_pass.value||u.role!==currentRole)return alert("Invalid login");
-currentUser=u;
-openDashboard();
+    let u=users[li_id.value];
+    if(!u||u.pass!==li_pass.value||u.role!==currentRole)return alert("Invalid credentials.");
+    currentUser=u;
+    openDashboard();
 }
 
 function openDashboard(){
-hideAll();
-dashboard.classList.remove("hidden");
-topBar.classList.remove("hidden");
-studentDash.classList.add("hidden");
-teacherDash.classList.add("hidden");
-parentDash.classList.add("hidden");
-if(currentUser.role==="student")studentDash.classList.remove("hidden");
-if(currentUser.role==="teacher")teacherDash.classList.remove("hidden");
-if(currentUser.role==="parent")parentDash.classList.remove("hidden");
-renderAll();
+    hideAll();
+    dashboard.classList.remove("hidden");
+    topBar.classList.remove("hidden");
+    studentDash.classList.add("hidden");
+    teacherDash.classList.add("hidden");
+    parentDash.classList.add("hidden");
+    if(currentUser.role==="student")studentDash.classList.remove("hidden");
+    if(currentUser.role==="teacher")teacherDash.classList.remove("hidden");
+    if(currentUser.role==="parent")parentDash.classList.remove("hidden");
+    renderAll();
 }
 
 function logout(){currentUser=null;goHome();}
 
 function openPanel(id){
-document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
-document.getElementById(id).classList.add("active");
+    document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
 }
 
 function renderAll(){
-renderAssignments();
-renderFeed();
-renderExams();
-renderParent();
-renderIP();
-renderNotesList();
-renderGrading();
+    renderAssignments();
+    renderFeed();
+    renderExams();
+    renderParent();
+    renderIP();
+    renderNotesList();
+    renderGrading();
+}
+
+// --- AI REVISION & FLASHCARDS ---
+let currentCards = [];
+let cardIndex = 0;
+let isFlipped = false;
+
+function generateAIRevision() {
+    const studentNotes = userNotes.filter(n => n.user === currentUser.name);
+    if(studentNotes.length === 0) return alert("Write and save some notes first to generate revision questions!");
+    
+    revisionContent.innerHTML = "<h4>AI Generated Quiz</h4>";
+    currentCards = [];
+    
+    studentNotes.forEach((n, index) => {
+        // Simple NLP Simulation: Extracting key terms from notes
+        let keywords = n.text.split(" ").filter(w => w.length > 5);
+        let question = `Based on your note from ${n.date}, what is the significance of: "${keywords[0] || 'the content'}"?`;
+        
+        revisionContent.innerHTML += `<div class="feed"><b>Q${index+1}:</b> ${question}</div>`;
+        
+        currentCards.push({
+            front: `Revision: ${keywords[0] || 'Concept'}`,
+            back: n.text.substring(0, 50) + "..."
+        });
+    });
+    
+    startFlashcards();
+}
+
+function startFlashcards() {
+    cardIndex = 0;
+    isFlipped = false;
+    showCard();
+}
+
+function showCard() {
+    if(currentCards.length === 0) return;
+    const card = currentCards[cardIndex];
+    flashcardDisplay.innerText = isFlipped ? card.back : card.front;
+    flashcardDisplay.style.background = isFlipped ? "#00c853" : "#00ffc6";
+}
+
+function flipCard() {
+    if(currentCards.length === 0) return;
+    isFlipped = !isFlipped;
+    showCard();
+    if(!isFlipped) {
+        cardIndex = (cardIndex + 1) % currentCards.length;
+    }
 }
 
 // --- SEARCHABLE NOTES ---
 function saveNotes(){
-if(!notesArea.value.trim()) return alert("Write something to save.");
-let newNote = {
-    user: currentUser.name,
-    text: notesArea.value,
-    date: new Date().toLocaleString()
-};
-userNotes.push(newNote);
-localStorage.userNotes = JSON.stringify(userNotes);
-notesArea.value = "";
-alert("Saved to cloud!");
-renderNotesList();
+    if(!notesArea.value.trim()) return alert("Notes are empty.");
+    let newNote = {
+        user: currentUser.name,
+        text: notesArea.value,
+        date: new Date().toLocaleString()
+    };
+    userNotes.push(newNote);
+    localStorage.userNotes = JSON.stringify(userNotes);
+    notesArea.value = "";
+    alert("Note secured in Cloud.");
+    renderNotesList();
 }
 
 function renderNotesList(filter=""){
-savedNotesList.innerHTML = "<h3>Saved Notes</h3>";
-userNotes.filter(n=>n.user === currentUser.name && n.text.toLowerCase().includes(filter.toLowerCase())).forEach(n=>{
-    savedNotesList.innerHTML += `<div class="feed" onclick="loadNoteToEditor('${n.text.replace(/'/g, "\\'")}')">
-        <span class="small">${n.date}</span><br>${n.text.substring(0,40)}...
-    </div>`;
-});
+    savedNotesList.innerHTML = "<h3>Saved Notes</h3>";
+    userNotes.filter(n=>n.user === currentUser.name && n.text.toLowerCase().includes(filter.toLowerCase())).forEach(n=>{
+        savedNotesList.innerHTML += `<div class="feed" onclick="loadNoteToEditor('${n.text.replace(/'/g, "\\'")}')">
+            <span class="small">${n.date}</span><br>${n.text.substring(0,40)}...
+        </div>`;
+    });
 }
 
-function filterNotes(){
-    renderNotesList(searchNotes.value);
-}
+function filterNotes(){ renderNotesList(searchNotes.value); }
 
 function loadNoteToEditor(text){
     notesArea.value = text;
     openPanel('s_notes');
 }
 
-// --- LIVE CLASS LOGIC ---
+// --- GLOBAL LIVE CLASS ---
 function toggleLive(){
     isLive = !isLive;
-    liveBtn.innerText = isLive ? "⏹ Stop Live Class" : "🔴 Start Live Online Class";
+    liveBtn.innerText = isLive ? "⏹ Stop Global Broadcast" : "🔴 Start Global Live Class";
     liveBtn.style.background = isLive ? "red" : "";
     if(isLive) {
-        sendTeacher("The Live Class session has started! Join now from anywhere.");
+        sendTeacher("🚨 A Global Live Class session has started. Join now!");
     }
     localStorage.isLive = isLive;
 }
 
-// --- AI GRADING & MONITORING ---
-function renderGrading(){
-    if(monitorActivity){
-        monitorActivity.innerHTML = submissions.map(s => `
-            <div class="feed">
-                <b>${s.student}</b> submitted ${s.type} 
-                <span class="small">(${s.status || 'Pending'})</span>
-                ${s.score ? `<br>Score: ${s.score}%` : ''}
-            </div>
-        `).join("");
-    }
-}
-
+// --- AI GRADING ENGINE ---
 function aiGradeSubmissions(){
     submissions.forEach(s => {
         if(!s.score) {
-            s.score = Math.floor(Math.random() * 30) + 70; // AI Grade Simulation
-            s.status = "AI Graded";
-            s.aiFeedback = "Excellent grasp of core concepts. Logic is sound.";
+            s.score = Math.floor(Math.random() * 21) + 79; // High-performance AI Grading
+            s.status = "AI Processed";
         }
     });
     localStorage.submissions = JSON.stringify(submissions);
-    alert("AI Grading Complete. Results synced with Parents.");
+    alert("AI Grading Protocol Complete. Data synced with Guardians.");
     renderAll();
 }
 
-// --- CORE LOGIC (ASSIGNMENTS/EXAMS/FEED) ---
+// --- CORE SCHOOL LOGIC ---
 function createAssignment(){
     assignments.push({title:tAssign.value, teacher:currentUser.name});
     localStorage.assignments=JSON.stringify(assignments);
-    sendTeacher(`New Assignment: ${tAssign.value}`);
+    sendTeacher(`New Assignment Released: ${tAssign.value}`);
     tAssign.value="";
     renderAssignments();
 }
 
 function renderAssignments(){
-    if(studentAssignments) studentAssignments.innerHTML = assignments.map(a=>`<div class="feed"><span class="badge">TASK</span> ${a.title}</div>`).join("");
+    if(studentAssignments) studentAssignments.innerHTML = assignments.map(a=>`<div class="feed"><span class="badge">ASSIGNMENT</span> ${a.title}</div>`).join("");
     if(tAssignFeed) tAssignFeed.innerHTML = assignments.map(a=>`<div class="feed">📘 ${a.title}</div>`).join("");
 }
 
 function submitAssignment(){
-    if(!assignFile.files.length) return alert("Select file");
+    if(!assignFile.files.length) return alert("Please select your work file.");
     submissions.push({student:currentUser.name, type:"Assignment", status:"Submitted"});
     localStorage.submissions=JSON.stringify(submissions);
-    alert("Work Uploaded!");
+    alert("Assignment Submitted!");
     renderGrading();
 }
 
 function takeExam(){
-    let score=Math.floor(Math.random()*40)+60;
-    submissions.push({student:currentUser.name,type:"Exam",score, status:"Completed"});
+    let score=Math.floor(Math.random()*30)+70;
+    submissions.push({student:currentUser.name,type:"Final Assessment",score, status:"Completed"});
     localStorage.submissions=JSON.stringify(submissions);
-    alert("Exam Results: "+score+"% (Synced with Parent)");
+    alert("Assessment Completed. Performance: "+score+"%");
     renderParent();
 }
 
 function sendTeacher(customMsg){
     let msg = customMsg || teacherMsg.value;
-    classFeed.push({user:"Teacher", text:msg, type: msgType ? msgType.value : "Update"});
+    if(!msg) return;
+    classFeed.push({user:"Faculty", text:msg, type: msgType ? msgType.value : "Update"});
     localStorage.classFeed=JSON.stringify(classFeed);
     if(teacherMsg) teacherMsg.value="";
     renderFeed();
 }
 
 function renderFeed(){
-    if(chatBox) chatBox.innerHTML = classFeed.map(m=>`<div class="feed"><span class="badge">${m.type || 'MSG'}</span> <b>${m.user}:</b> ${m.text}</div>`).reverse().join("");
+    if(chatBox) chatBox.innerHTML = classFeed.map(m=>`<div class="feed"><span class="badge">${m.type}</span> <b>${m.user}:</b> ${m.text}</div>`).reverse().join("");
     if(teacherFeed) teacherFeed.innerHTML = classFeed.map(m=>`<div class="feed"><b>${m.user}:</b> ${m.text}</div>`).reverse().join("");
     
-    // Live Indicator in Student Dash
     if(liveStatus){
         let live = localStorage.isLive === "true";
-        liveStatus.innerHTML = live ? `<div class="card"><h3 class="live-indicator">● LIVE CLASS IN PROGRESS</h3><button onclick="alert('Joining Global Stream...')">Join Live Session</button></div>` : "<p>No active live classes.</p>";
+        liveStatus.innerHTML = live ? `<div class="card"><h3 class="live-indicator">● LIVE FROM CLASSROOM</h3><button onclick="alert('Joining Global Stream...')">Enter Stream</button></div>` : "<p>No active broadcasts.</p>";
     }
 }
 
 function renderParent(){
-    if(parentResults) parentResults.innerHTML = submissions.map(s=>`<div class="feed">📊 <b>${s.student}</b>: ${s.type} Result: ${s.score || 'Awaiting Grade'}%</div>`).join("");
+    if(parentResults) parentResults.innerHTML = submissions.map(s=>`<div class="feed">📊 <b>${s.student}</b>: ${s.type} — ${s.score || 'Awaiting AI Grading'}%</div>`).join("");
 }
 
-// INFLUENSA & STYLUS (Original Logic Preserved)
+function renderGrading(){
+    if(monitorActivity) monitorActivity.innerHTML = submissions.map(s => `<div class="feed">${s.student}: ${s.type} (${s.status})</div>`).join("");
+}
+
+// INFLUENSA & STYLUS (Preserved Logic)
 function postIP(){
     ipMarket.push({owner:currentUser.name,desc:ipText.value,price:ipPrice.value});
     localStorage.ipMarket=JSON.stringify(ipMarket);
     ipText.value=""; renderIP();
 }
 function renderIP(){
-    if(s_influensa) s_influensa.querySelector("#ipFeed").innerHTML = ipMarket.map(ip=>`<div class="feed">💡 ${ip.owner}: ${ip.desc} — ${ip.price}c</div>`).join("");
+    if(s_influensa) s_influensa.querySelector("#ipFeed").innerHTML = ipMarket.map(ip=>`<div class="feed">💡 ${ip.owner}: ${ip.desc} — ${ip.price} Credits</div>`).join("");
 }
 
+// Stylus Canvas
 const canvas=document.getElementById("canvas");
 const ctx=canvas.getContext("2d");
 ctx.lineCap="round";ctx.lineJoin="round";
@@ -482,7 +534,7 @@ canvas.addEventListener("touchend",stopDraw);
 function clearCanvas(){ctx.clearRect(0,0,canvas.width,canvas.height);}
 function saveCanvas(){
     let link=document.createElement("a");
-    link.download="sketch.png";
+    link.download="greenbook_sketch.png";
     link.href=canvas.toDataURL();
     link.click();
 }
